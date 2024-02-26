@@ -1,0 +1,72 @@
+import { FilterQuery } from "mongoose"
+import { UserDocument, UserModel, UserInput } from "../models/user.model"
+import { get, omit } from "lodash"
+import { signJWT, verifyJwt } from "../lib/utils/jwt.utils"
+import { JwtPayload } from "jsonwebtoken"
+import { AppError } from "../lib/utils/AppError"
+
+const accessTokenTtl = "5m"
+const refreshTokenTtl = "30d"
+
+export const login = async (loginDetails: { email: string, password: string }, userAgent: string) => {
+    const user = await validatePassword(loginDetails)
+
+    if (!user) {
+        throw new AppError("Wrong username or password", 500, 500)
+    }
+    const accessToken = signJWT({ user }, { expiresIn: accessTokenTtl })
+    const refreshToken = signJWT({ user }, { expiresIn: refreshTokenTtl })
+
+    return { accessToken, refreshToken }
+}
+
+export const createUser = async (input: UserInput) => {
+    const user = await UserModel.create({ ...input, words: [] })
+    return omit(user, "password")
+}
+
+export const validatePassword = async ({ email, password }: { email: string, password: string }) => {
+    const user = await UserModel.findOne({ email })
+    if (!user) {
+        return false
+    }
+    const passwordMatch = await user.comparePassword(password)
+    if (!passwordMatch) {
+        return false
+    }
+    return omit(user.toJSON(), "password")
+}
+
+export const getUser = async (userId: string, user: string) => {
+    if (userId !== user) {
+        throw new Error("Users do not match")
+    }
+    const queriedUser = (await UserModel.findById(userId)).populate("userMovies", { movie: 1, watched: 1 })
+    return queriedUser
+}
+
+export const findUser = async (query: FilterQuery<UserDocument>) => {
+    const user = await UserModel.findById(query._id).lean()
+    console.log(user)
+    return user
+}
+
+export const reIssueAccessToken = async ({ refreshToken }: { refreshToken: string }) => {
+    const { decoded } = verifyJwt(refreshToken) as JwtPayload
+    const userId = get(decoded?.user, "_id")
+
+    if (!decoded || !userId) {
+        return false
+    }
+
+
+    let user = await findUser(decoded.user)
+
+
+
+    if (!user) return false
+
+    const accessTokenTtl = "5m"
+    const accessToken = signJWT({ user: { email: user.email, name: user.name, _id: user._id } }, { expiresIn: accessTokenTtl })
+    return accessToken
+}
