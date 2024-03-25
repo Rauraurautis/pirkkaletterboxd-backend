@@ -1,0 +1,1 @@
+{"level":30,"time":"2024-03-20T00:18:32+02:00","pid":false,"test":"info","msg":"Listening to port 1337"}

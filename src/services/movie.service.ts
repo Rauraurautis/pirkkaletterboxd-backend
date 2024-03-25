@@ -22,12 +22,3 @@ export const postUserMovie = async (movieDetails: MovieInput, userId: string, us
     await foundUser.save()
     return userMovie
 }
-
-export const getUserMovies = async (username: string) => {
-    const foundUser = await UserModel.findOne({ name: username }).populate("userMovies", { movie: 1, watched: 1 })
-    if (!foundUser) {
-        throw new AppError("User not found!", 404, 404)
-    }
-    const userMovies = foundUser.userMovies
-    return userMovies
-}

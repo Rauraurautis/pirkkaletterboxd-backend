@@ -35,6 +35,6 @@ export const deleteReview = async (reviewId: string, userId: string) => {
     if (user) {
         const review = await ReviewModel.findById(reviewId)
         const removed = await review.deleteOne()
-        return removed
+        return review
     }
 }

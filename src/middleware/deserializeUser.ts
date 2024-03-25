@@ -9,7 +9,6 @@ export const deserializeUser = async (req: Request, res: Response, next: NextFun
     const accessToken = get(req, "headers.authorization")?.slice(7)
     const refreshToken = req.cookies["refreshToken"]
 
-
     if (!accessToken) {
         return next()
     }

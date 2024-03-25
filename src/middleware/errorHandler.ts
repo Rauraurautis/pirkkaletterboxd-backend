@@ -16,5 +16,5 @@ export const errorHandler = async (error: any, req: Request, res: Response, next
         return res.status(401).json({ error: error.name })
     }
 
-    return res.status(400).json("asd")
+    return res.status(400).json(error)
 }
